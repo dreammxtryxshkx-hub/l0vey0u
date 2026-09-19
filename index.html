@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para ti</title>
+<style>
+
+  :root{
+    --rojo: #e0362a;
+    --rosa-claro: #f7d3d9;
+    --rosa-fondo: #fbe9ef;
+    --rosa-vivo: #e56fc9;
+    --morado: #7c3f9e;
+    --vino: #3a0e14;
+    --blanco: #ffffff;
+    --texto: #4a1530;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(160deg, var(--rosa-fondo) 0%, #f6dce8 55%, #f3d2e4 100%);
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    color: var(--texto);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    padding: 24px 0;
+  }
+
+  .pantalla{
+    width: 100%;
+    max-width: 420px;
+    padding: 0 20px;
+    text-align: center;
+  }
+
+  /* ---------- Tarjeta blanca central (estilo pin-pad) ---------- */
+
+  .tarjeta{
+    background: var(--blanco);
+    border-radius: 28px;
+    padding: 34px 26px 30px;
+    box-shadow: 0 20px 45px rgba(122,25,70,0.18), 0 2px 8px rgba(122,25,70,0.08);
+  }
+
+  h1{
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin: 0 0 6px;
+    color: var(--rosa-vivo);
+  }
+
+  .subtexto{
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(74,21,48,0.45);
+    margin: 0 0 22px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  /* ---------- indicadores de dígitos (corazones) ---------- */
+
+  .indicadores{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 26px;
+  }
+
+  .indicador{
+    width: 16px;
+    height: 16px;
+    position: relative;
+    opacity: 0.25;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .indicador::before{
+    content: "\2665";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rojo);
+    font-size: 18px;
+  }
+
+  .indicador.lleno{
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  .error{
+    font-size: 12px;
+    color: var(--rojo);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    opacity: 0;
+    height: 16px;
+    margin-bottom: 8px;
+    transition: opacity 0.2s ease;
+  }
+
+  .error.mostrar{ opacity: 1; }
+
+  .shake{ animation: shake 0.4s ease; }
+
+  @keyframes shake{
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+
+  /* ---------- teclado numérico ---------- */
+
+  .teclado{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .tecla{
+    aspect-ratio: 1.5 / 1;
+    border: none;
+    border-radius: 16px;
+    background: var(--rosa-fondo);
+    color: var(--morado);
+    font-size: 20px;
+    font-weight: 600;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+
+  .tecla:hover{
+    background: var(--rosa-claro);
+    transform: translateY(-2px);
+  }
+
+  .tecla:active{ transform: scale(0.95); }
+
+  .tecla-corazon{
+    background: linear-gradient(135deg, var(--rosa-vivo), var(--rojo));
+    color: var(--blanco);
+    font-size: 22px;
+  }
+
+  .tecla-corazon:hover{
+    background: linear-gradient(135deg, var(--rosa-vivo), var(--rojo));
+    filter: brightness(1.08);
+  }
+
+  .tecla-borrar{
+    background: none;
+    color: rgba(74,21,48,0.4);
+    font-size: 18px;
+  }
+
+  .tecla-borrar:hover{
+    background: rgba(74,21,48,0.06);
+  }
+
+  /* ---------- Pantalla de selección de carta ---------- */
+
+  .pantalla-cartas{
+    max-width: 560px;
+  }
+
+  .pantalla-cartas h1{
+    font-size: 24px;
+    margin-bottom: 4px;
+    color: var(--morado);
+  }
+
+  .instruccion{
+    font-size: 14px;
+    color: rgba(74,21,48,0.55);
+    margin-bottom: 26px;
+    font-family: Georgia, serif;
+  }
+
+  .grid-cartas{
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 420px){
+    .grid-cartas{ grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .carta{
+    aspect-ratio: 1 / 1;
+    border-radius: 18px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    user-select: none;
+    color: var(--blanco);
+    box-shadow: 0 6px 14px rgba(122,25,70,0.18);
+  }
+
+  /* alterna la paleta: rojo / rosa vivo / morado / rosa claro */
+  .carta:nth-child(4n+1){ background: linear-gradient(150deg, var(--rojo), #b81f16); }
+  .carta:nth-child(4n+2){ background: linear-gradient(150deg, var(--rosa-vivo), #c94aa8); }
+  .carta:nth-child(4n+3){ background: linear-gradient(150deg, var(--morado), #5b2a78); }
+  .carta:nth-child(4n){
+    background: linear-gradient(150deg, var(--rosa-claro), #f0b8c6);
+    color: var(--vino);
+  }
+
+  .carta:hover{
+    transform: translateY(-5px);
+    box-shadow: 0 12px 22px rgba(122,25,70,0.28);
+  }
+
+  .carta.elegida{
+    outline: 3px solid var(--vino);
+    outline-offset: 3px;
+    transform: translateY(-5px) scale(1.04);
+  }
+
+  /* ---------- Overlay del mensaje ---------- */
+
+  .overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(58,14,20,0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    padding: 24px;
+    z-index: 10;
+    overflow-y: auto;
+  }
+
+  .overlay.visible{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .carta-mensaje{
+    max-width: 440px;
+    width: 100%;
+    background: var(--blanco);
+    color: var(--texto);
+    border-radius: 24px;
+    padding: 40px 30px 34px;
+    text-align: center;
+    position: relative;
+    transform: translateY(14px) scale(0.97);
+    transition: transform 0.28s ease;
+    box-shadow: 0 25px 60px rgba(58,14,20,0.35);
+    margin: auto;
+  }
+
+  .overlay.visible .carta-mensaje{
+    transform: translateY(0) scale(1);
+  }
+
+  .icono-corazon{
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--rosa-vivo), var(--rojo));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--blanco);
+    font-size: 18px;
+  }
+
+  .numero-carta{
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: var(--rosa-vivo);
+    margin-bottom: 14px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .texto-carta{
+    font-size: 17px;
+    line-height: 27px;
+    white-space: pre-wrap;
+    text-align: left;
+  }
+
+  .cerrar{
+    margin-top: 26px;
+    background: var(--rosa-fondo);
+    border: none;
+    color: var(--morado);
+    padding: 11px 26px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    transition: background 0.2s ease;
+  }
+
+  .cerrar:hover{ background: var(--rosa-claro); }
+
+  .oculto{ display: none; }
+
+  /* ---------- botón de música flotante ---------- */
+
+  .btn-musica{
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--blanco);
+    color: var(--rosa-vivo);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(122,25,70,0.22);
+    z-index: 20;
+    transition: transform 0.15s ease;
+  }
+
+  .btn-musica:hover{ transform: scale(1.08); }
+  .btn-musica:active{ transform: scale(0.95); }
+
+</style>
+
+</head>
+<body>
+
+  <audio id="musicaFondo"></audio>
+  <button class="btn-musica oculto" id="btnMusica">&#9835;</button>
+
+  <!-- ===================== PANTALLA 1: CONTRASEÑA ===================== -->
+  <div class="pantalla" id="pantallaPassword">
+    <div class="tarjeta">
+      <h1>Ingresa la contraseña</h1>
+      <p class="subtexto">Esto es solo para ti</p>
+      <div class="indicadores" id="indicadores"></div>
+      <p class="error" id="mensajeError">Contraseña incorrecta</p>
+      <div class="teclado" id="teclado">
+        <button class="tecla" data-num="1">1</button>
+        <button class="tecla" data-num="2">2</button>
+        <button class="tecla" data-num="3">3</button>
+        <button class="tecla" data-num="4">4</button>
+        <button class="tecla" data-num="5">5</button>
+        <button class="tecla" data-num="6">6</button>
+        <button class="tecla" data-num="7">7</button>
+        <button class="tecla" data-num="8">8</button>
+        <button class="tecla" data-num="9">9</button>
+        <button class="tecla tecla-corazon" id="btnEntrar">&#10084;</button>
+        <button class="tecla" data-num="0">0</button>
+        <button class="tecla tecla-borrar" id="btnBorrar">&#9003;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA 2: ELEGIR CARTA ===================== -->
+  <div class="pantalla pantalla-cartas oculto" id="pantallaCartas">
+    <h1>Elige una carta</h1>
+    <p class="instruccion">Un número, una carta para ti</p>
+    <div class="grid-cartas" id="gridCartas"></div>
+  </div>
+
+  <!-- ===================== OVERLAY DEL MENSAJE ===================== -->
+  <div class="overlay" id="overlayMensaje">
+    <div class="carta-mensaje">
+      <div class="icono-corazon">&#10084;</div>
+      <div class="numero-carta" id="numeroMensaje">CARTA</div>
+      <div class="texto-carta" id="textoMensaje"></div>
+      <button class="cerrar" id="btnCerrar">Cerrar</button>
+    </div>
+  </div>
+
+<script>
+
+  // ============================================================
+  // CONTRASEÑA
+  // ============================================================
+  const PASSWORD = "1807";
+
+  const LISTA_MUSICA = ["musica/cancion1.mp3", "musica/cancion2.mp3", "musica/cancion3.mp3", "musica/cancion4.mp3", "musica/cancion5.mp3"];
+
+  // ============================================================
+  // TEXTOS DE LAS 18 CARTAS
+  // ============================================================
+  const cartas = {
+    1:  { texto: `"La primera vez que coincidimos"
+
+Quiero comenzar estas 18 cartas desde el principio, desde aquel momento en que te conocí.
+Fue un 4 de Julio la primera vez que coincidimos en el juego. Tal vez fue una simple coincidencia que nos emparejaran doble vez, o tal vez ya estaba destinado que nos conozcamos. Recuerdo que estaba indecisa en si aceptar tu solicitud o no, porque a mi siempre me daba miedo encontrarme con gente extraña o que solo tenga un propósito sexual.
+Después también dudé mucho en pasarte mi número, porque eso significaba seguir teniendo contacto contigo, y nuevamente me aterraba por las mismas razones. Pero hoy puedo decir, sin ninguna duda, que nunca me arrepentiré de haberlo hecho.
+En ese momento jamás imaginé que llegarías a ser una persona tan importante para mí. Si pudiera volver a ese día, creo que me gustaría decirle a esa versión de mí que no tuviera ningún miedo, que diera una oportunidad a aquella persona que acababa de conocer y que, sin saberlo, terminaría encontrando a alguien que la haría muy feliz.
+Nunca podría arrepentirme de aquella decisión, porque fue el comienzo de nosotros.
+Te amo, mi amor.` },
+    2:  { texto: `"Cuando me di cuenta de que me gustabas"
+
+No puedo darte una fecha exacta de cuándo empezaste a gustarme. Solo recuerdo que, poco a poco, comencé a estar pendiente de cuándo me escribías. Esperaba con demasiadas ansias tus mensajes y hasta me hacía ilusión cuando veía que eras tú quien me estaba escribiendo.
+También recuerdo cuando me llamabas tan solo para molestarme en las madrugadas y hacerme reír. Me gustaba todo eso que hacías. Sin darme cuenta, comenzaste a hacerme feliz en esos días en los que solo podía sentirme estresada por la universidad y cargar con mi propia tristeza.
+Y así, poco a poco, comenzaste a hacerte presente en mi día a día. Empecé a acostumbrarme a tus mensajes, a tus llamadas, a nuestras conversaciones y a tenerte cerca, incluso estando lejos.
+Tal vez al principio tuve miedo de que empezaras a gustarme por nuestra diferencia de edad. Pensaba que quizá eso podría ser un impedimento, pero al final no lo fue.
+Supongo que no hubo un momento exacto en el que me di cuenta de que me gustabas. Simplemente llegó un punto en el que ya eras parte de mis días y me hacía feliz que fuera así.
+Te amo, mi amor.` },
+    3:  { texto: `"Lo que más me gusta de ti"
+
+Para comenzar esta carta, debo recalcar que podría pasarme todo el día enumerando cada cosa que me gusta de ti y aun así sentir que me faltaron muchas cosas más por mencionar.
+Hay tantas cosas que me gustan de ti, como ya lo he mencionado en las cartas anteriores, pero una de las que más puedo resaltar es que me haces sentir amada. Contigo me siento muy valorada, apreciada y querida, y eso es algo que significa muchísimo para mí.
+Me encanta cuando me invitas a jugar y tienes paciencia conmigo, incluso cuando probablemente no soy la mejor jugando. También me encantan las llamadas que tenemos casi todos los días, esas que espero con muchísimas ansias porque siempre terminan alegrándome el día.
+Me gusta cómo todos los días estás pendiente de mí, cómo te preocupas por saber cómo estoy y cómo, incluso con pequeños detalles, consigues hacerme sentir especial.
+Y tu voz... tu voz la amo, mi amor. Creo que podría pasarme todo un día escuchándote y seguiría siendo feliz. Incluso podría escucharte durante toda mi vida y no me cansaría de ella.
+También, aunque todavía no sé cómo eres en la vida real, por las fotos he podido observar puedo decir que eres muy guapo, mi amor. Eres mi niño de ojos bonitos. Y no tienes por qué sentirte mal con tu apariencia ni tener el autoestima baja, porque para mí eres guapo, mi vida. Quiero que puedas verte algún día como yo te veo.
+Yo te amo tal y como eres. No tienes que cambiar nada para que te quiera más, porque me gustas tú, con tus virtudes, tus defectos, tus ocurrencias y cada una de esas pequeñas cosas que te hacen ser quien eres.
+Me gusta todo de ti, mi amor.
+Te amo, mi amor.` },
+    4:  { texto: `"Lo que cambió en mí desde que llegaste"
+
+Esos primeros días en los que hablábamos, yo seguía mi rutina con normalidad porque no pensaba que fuéramos a seguir hablando por mucho tiempo. Pero poco a poco empecé a estar más pendiente de mi celular, esperando algún mensaje tuyo o una llamada para jugar.
+Me gustaba levantarme y encontrar uno de tus mensajes. Sin darme cuenta, comenzaste a ocupar gran parte de mis pensamientos. Todo el día pensaba y sigo pensando en ti.
+Pero, sobre todo, creo que el cambio más grande fue que empecé a apartar mis noches para ti, exclusivamente para ti. Antes, si tenía la oportunidad de salir de mi casa, la aprovechaba sin pensarlo demasiado. Ahora muchas veces prefiero quedarme, porque me encanta pasar tiempo contigo, ya sea en una llamada, jugando o simplemente hablando por mensajes.
+Ahora, cada vez que salgo de la universidad, no lo pienso demasiado y regreso lo más rápido que puedo a casa. Y creo que eso demuestra cuánto cambiaste mi rutina sin siquiera proponértelo.
+Antes simplemente vivía mis días como siempre, pero desde que llegaste, hay una parte de ellos que espero con muchas ganas y son los días que puedo compartir contigo.
+Te amo, mi amor.` },
+    5:  { texto: `"Nuestro mejores recuerdos"
+
+No creo poder elegir cuáles serían mis mejores recuerdos de este corto tiempo que llevamos conociéndonos y siendo pareja, porque han sido muchos y cada uno tiene algo especial para mí.
+Uno de ellos podría ser la primera vez que hablamos por llamada. Si no me equivoco, fue para jugar Roblox y poder escucharnos mejor. Esa noche me divertí muchísimo y, si no recuerdo mal, también fue la primera vez que nos quedamos dormidos en llamada, aunque solo fueran unas pocas horas después de la amanecida que nos tiramos.
+También recuerdo que ese mismo día te pasé mi cuenta de Free Fire. Puede parecer un detalle pequeño, pero para mí significaba mucho porque desde ese momento ya confiaba bastante en ti. Y aunque después hubo una situación que me hizo sentir decepcionada, quiero que sepas que lo que realmente me dolió no fue lo que pasó, sino la mentira. A pesar de eso, sigo queriendo construir contigo una relación basada en la confianza y espero que podamos seguir fortaleciéndola juntos.
+Pero me estoy desviando del tema. Nuestros recuerdos son muchos más y sé que todavía nos quedan muchísimos por crear. Me gustaría que sigamos acumulando momentos, llamadas, juegos, amanecidas, risas y todas esas pequeñas cosas que algún día podremos recordar juntos.
+Aunque si tuviera que elegir el recuerdo más valioso de todos, sin duda sería el día en que acepté ser tu novia. Porque desde ese momento dejamos de ser simplemente dos personas que se habían conocido por casualidad y comenzamos a construir algo hermoso.
+Espero que este sea solo el comienzo de todos los recuerdos que nos quedan por vivir.
+Te amo, mi amor.` },
+    6:  { texto: `"18 preguntas que quiero hacerte"
+
+1. ¿Cuál es el futuro que ves conmigo?
+2. ¿Qué cosa pequeña puede hacer que tengas un día mucho mejor?
+3. ¿Qué lugar del mundo te gustaría conocer algún día y por qué?
+4. ¿Cuál fue el momento exacto en el que pensaste por primera vez "creo que ella me gusta"?
+5. ¿Qué fue lo primero que pensaste de mí cuando empezamos a hablar?
+6. ¿Hay alguna conversación nuestra que recuerdes especialmente? ¿Qué tenía de diferente?
+7. ¿Cuál es una cosa que hago que te encanta?
+8. ¿Cuál ha sido el momento en el que más te has reído conmigo?
+9. ¿Qué cosa de nuestra relación te sorprendió cuando empezamos a ser pareja?
+10. ¿Cuál es una costumbre mía que ya se volvió parte de tu día a día?
+11. ¿Qué momento nuestro te gustaría poder guardar en una cajita para volver a abrirlo dentro de muchos años?
+12. ¿Hay algo que hayas querido decirme alguna vez pero nunca encontraste el momento para hacerlo?
+13. ¿Cuál fue el primer momento en el que sentiste que podías ser completamente tú conmigo?
+14. ¿Qué cosa crees que hacemos como pareja que nos diferencia de otras parejas?
+15. Ahora que tienes 18, ¿qué cosa de nuestra historia te gustaría que siguiéramos contando cuando seamos mucho mayores?
+16. ¿Qué es algo que te gustaría cambiar o mejorar de ti mismo?
+17. ¿Qué cosa te da miedo perder algún día?
+18. ¿Qué esperas de esta nueva etapa de tu vida?` },
+    7:  { texto: `"Gracias por..."
+
+Gracias por aparecer en mi vida.
+Gracias por todo lo que haces por mí, por pensar en mí y por hacerme sentir importante para ti. Gracias por ser mi pareja, por sacarme una sonrisa día a día y por estar presente incluso en esos momentos en los que no estoy teniendo un buen día.
+Gracias por entenderme, por tenerme paciencia, por escucharme y por considerarme en tus cosas. Gracias por hacerme un espacio en tu vida y por permitirme formar parte de ella.
+Gracias por cada llamada, cada mensaje, cada momento que compartimos y por todas esas pequeñas cosas que quizás para ti parecen normales, pero que para mí significan muchísimo.
+Y, sobre todo, gracias por ser tú. Gracias por simplemente existir, mi amor, y por haber llegado a mi vida de una manera que jamás imaginé.
+No sé qué habría pasado si aquel 4 de julio no hubiéramos coincidido, pero hoy solo puedo estar agradecida de que lo hayamos hecho.
+Te amo, mi amor.` },
+    8:  { texto: `"Cuando estés triste"
+
+Si estás abriendo esta carta, probablemente te sientes triste. No sé cuál sea el motivo, quizá pasó algo familiar, tuviste un mal día o tal vez tuvimos una pelea entre nosotros. Sea cual sea la razón, quiero recordarte algo: no tienes que pasar por esto solo.
+No siempre podremos estar felices y eso está bien. Habrá días buenos y días malos, momentos en los que todo parezca estar bien y otros en los que simplemente necesitemos llorar y desahogarnos.
+Si tienes ganas de llorar, llora, mi amor. No tienes que esconder lo que sientes. Desahógate todo lo que necesites y, cuando te sientas un poquito mejor, lávate tu carita hermosa, respira y recuerda que las cosas no siempre se quedan así para siempre.
+También puedes tomarte un momento para orar por aquello que estás pasando. Cuéntale a Dios cómo te sientes y pídele que te dé tranquilidad y fuerzas para afrontar lo que venga. Después, cuando estés listo, piensa con calma en lo que pasó y, si hay algo que puedas hacer para solucionarlo, hazlo poco a poco. No tienes que resolver todo de una vez.
+Y si simplemente necesitas que alguien te escuche, siempre puedes contar conmigo. Puedes llamarme, escribirme, contarme lo que te pasa o simplemente quedarte conmigo en silencio. No siempre voy a saber qué decir ni voy a poder solucionar tus problemas, pero siempre voy a querer acompañarte.
+Porque de eso se trata, mi amor. No se trata de sufrir las cosas solo, sino de permitir que las personas que te aman estén contigo cuando más lo necesites.
+Siempre estaré para ti, así como Dios también está para ti.
+Te amo, mi amor. No lo olvides, especialmente en los días en los que más te cueste recordarlo.` },
+    9:  { texto: `"Cuando dudes de ti"
+
+Si estás leyendo esta carta porque tienes alguna duda sobre ti, sobre tu futuro o sobre las cosas que quieres lograr, quiero que recuerdes algo. Recién tienes 18 años. Todavía tienes toda una vida por delante y estoy segura de que vienen muchas cosas buenas para ti.
+No te desesperes por conseguir todo lo que quieres de inmediato. No tienes que tener tu vida completamente resuelta ahora. Cada cosa llegará a su momento. Es mejor avanzar poco a poco, hacerlo lento pero seguro, que sentir que tienes que conseguirlo todo de una vez.
+Ten confianza en ti, mi amor. Tú puedes lograr cualquier cosa que realmente te propongas. Nunca olvides todo lo que eres capaz de hacer y, sobre todo, nunca te sientas menos que nadie.
+A pesar de tu corta edad, ya estás aprendiendo a valerte prácticamente por ti mismo y eso es algo que admiro mucho de ti. Quizá tú no siempre puedas verlo, pero yo sí puedo ver todo lo que has logrado y la persona en la que te estás convirtiendo.
+No compares tu camino con el de los demás. Cada persona tiene su propio tiempo y tú tienes el tuyo. No importa si algunas cosas te toman más tiempo de lo que esperabas; mientras sigas avanzando, estarás acercándote a donde quieres llegar.
+Y cuando tengas miedo de no poder, recuerda que no tienes que hacerlo todo solo. Puedes apoyarte en las personas que te quieren y, sobre todo, nunca olvides a Dios. Pídele que te ilumine, que te dé sabiduría y que te acompañe en cada decisión que tomes para alcanzar aquello que te propongas.
+Yo confío en ti, incluso en esos momentos en los que tú mismo dudes de lo que eres capaz.
+Nunca olvides lo mucho que vales, mi amor.
+Te amo, mi amor.` },
+    10: { texto: `"Lo que significa para mí ser tu novia"
+
+Creo que no podría expresar por completo lo mucho que significa para mí todo lo que ha pasado desde que nos conocimos. A veces pienso en cómo empezó todo y me parece increíble que aquella simple coincidencia terminara convirtiéndose en algo tan importante para mí.
+Me siento muy afortunada de tenerte como mi novio. Me haces sentir demasiado feliz, de una manera que nunca imaginé que podría sentir. Me gusta ser tu novia, me encanta poder decir que tengo novio y, sobre todo, me encanta poder decir que eres tú.
+Me gusta hacerte presente en mi vida, hablar de ti, contarte mis cosas y saber que tengo a alguien con quien compartir mis días. Me gusta saber que, entre tantas personas, tú y yo decidimos estar juntos y comenzar a construir algo nuestro.
+También me hace muy feliz la manera en que me tratas. Me haces sentir querida, valorada y apreciada. Y creo que todo eso hace que cada día me guste más ser tu novia.
+No sé cómo explicar exactamente todo lo que siento cuando pienso en nosotros, pero sí sé que te amo un montón y que estoy muy feliz de poder vivir esta etapa contigo.
+Ser tu novia significa para mí tener a alguien a quien quiero muchísimo, pero también significa tener a mi compañero para compartir mis días, mis risas, mis llamadas, nuestros juegos y todos esos pequeños momentos que poco a poco se han convertido en recuerdos importantes para mí.
+Y aunque todavía nos queda muchísimo por vivir, me hace feliz saber que puedo seguir creando recuerdos contigo y descubriendo todo lo que nos espera.
+Te amo muchísimo, mi amor.` },
+    11: { texto: `"Canciones que me hacen recordarte"
+
+Hay canciones que cuando las escucho me hacen pensar inmediatamente en ti. Algunas me recuerdan a lo que siento por ti, otras a la forma en la que vivimos nuestra relación y otras simplemente tienen algo que me hace asociarlas contigo.
+
+Only – Lee Hi
+Esta canción me hace pensar en lo especial que es tenerte en mi vida y en ese sentimiento de querer compartir mi tiempo contigo. Me recuerda a lo mucho que disfruto tenerte presente en mis días.
+
+La Cumbia del Amor – Mauricio Mesones
+Me recuerda a nuestro lado más alegre y divertido. A esas ganas de disfrutar juntos, jugar, reírnos y pasarla bien sin importar lo que estemos haciendo.
+
+Coração Marruá – Agnes Nunes y Mariana Flores
+Esta canción me hace pensar en la intensidad de lo que siento por ti. En ese cariño que fue creciendo poco a poco hasta convertirse en algo muy importante para mí.
+
+Middle of the Night – MONSTA X
+Me recuerda mucho a nuestras noches y madrugadas juntos. A esas llamadas que tenemos, a quedarnos hablando y a esos momentos en los que simplemente me gusta tenerte conmigo, incluso a través de una llamada.
+
+Falling Again – Klang
+Me hace pensar en cómo cada vez puedo sentir más cariño por ti. En cómo, con el paso del tiempo, sigo encontrando nuevas razones para quererte y seguir enamorándome de ti.
+
+Te Quiero – Hombres G
+Esta es una de esas canciones que simplemente me hace pensar en lo que siento por ti. En lo mucho que te quiero y en lo feliz que me hace poder decirte que eres mi novio.
+
+No Other Heart – Mac DeMarco
+Esta canción me recuerda a lo especial que eres para mí. A que, entre tantas personas, fuiste tú quien llegó a mi vida y terminó convirtiéndose en alguien que quiero tener a mi lado.
+
+Quizá para otras personas estas canciones solo sean canciones, pero para mí ahora tienen algo diferente. Cada vez que las escuche, probablemente voy a pensar en ti y en nosotros.
+Y quién sabe, tal vez con el tiempo nuestra lista de canciones siga creciendo junto con todos los recuerdos que nos quedan por crear.
+Te amo, mi amor.` },
+    12: { texto: `"Si algún día nos sentimos lejos"
+
+En toda relación creo que llega algún momento en el que las cosas pueden volverse difíciles, y nosotros, al tener una relación a distancia, sabemos que puede ser mucho más complicado en ese sentido. Habrá momentos en los que la distancia se sienta más que otros, en los que anhelemos demasiado poder estar juntos o en los que sintamos que, aunque hablemos todos los días, algo nos hace sentir un poco lejos.
+Si algún día llegamos a sentirnos así, quiero que podamos hablarlo. Me gustaría que cada uno tenga la confianza de decir qué siente, qué piensa y qué cree que podemos mejorar en nuestra relación. No quiero que ninguno de los dos se quede callado por miedo a iniciar una discusión o por pensar que las cosas simplemente se solucionarán solas.
+Quiero que tengamos la madurez suficiente para reconocer cuando algo no está bien y buscar juntos la manera de solucionarlo. Sé que no siempre vamos a pensar igual ni vamos a estar de acuerdo en todo, pero creo que lo importante es que podamos escucharnos, entendernos y recordar por qué decidimos estar juntos.
+No quiero que una dificultad, una pelea o la distancia hagan que olvidemos todos los momentos bonitos que hemos vivido. Quiero que, cuando las cosas se pongan difíciles, podamos recordar todo lo que hemos construido hasta ahora y tener las ganas de seguir construyendo más.
+Sé que todavía nos esperan dificultades y que quizá no siempre será sencillo, pero quiero que podamos enfrentarlas juntos. Que si algún día uno de los dos siente que se está alejando, el otro pueda acercarse y que ambos hagamos lo necesario para volver a encontrarnos.
+Porque aunque ahora mismo ya estemos lejos físicamente, no quiero que algún día también nos sintamos lejos en el corazón.
+Quiero que sigamos siendo esa pareja bonita que hemos ido construyendo, incluso cuando las cosas se pongan difíciles.
+Y si algún día nos sentimos lejos, espero que en lugar de alejarnos más, podamos elegir hablar, entendernos y volver a encontrarnos.
+Te amo, mi amor.` },
+    13: { texto: `"Lo que sueño para ti"
+
+Quiero que puedas llegar a cumplir todo lo que te propones y todo aquello que alguna vez me has contado que quieres para tu vida.
+Quiero que algún día puedas comprar esa moto soñada que tanto te gusta, que puedas tener el celular que quieres y que puedas estudiar una carrera que realmente te guste, pero que también te beneficie y te permita construir el futuro que deseas.
+También quiero que puedas entrar a un club donde me contaste que te gustaría jugar. Sé que son cosas que quizá ahora parecen lejanas o que todavía no puedes conseguir, pero espero que poco a poco puedas ir cumpliéndolas.
+Quiero verte conseguir cada una de esas cosas que alguna vez me contaste, incluso aquellas que quizá ya hayas olvidado que me dijiste. Me gusta escucharte hablar sobre lo que quieres para tu futuro y conocer esos pequeños sueños que tienes.
+No quiero que tengas que cumplirlos todos de inmediato. Solo quiero que nunca dejes de intentarlo y que, aunque algunas cosas tarden más de lo que esperabas, sigas avanzando hacia ellas.
+Espero poder estar presente para verte cumplir cada una de esas metas y poder decirte algún día: "¿Te acuerdas cuando me contabas que querías esto? Ahora finalmente lo tienes."
+Quiero que tengas una vida de la que puedas sentirte orgulloso, que puedas hacer las cosas que te gustan y que puedas mirar atrás y darte cuenta de todo lo que lograste.
+Yo voy a estar aquí, apoyándote y alegrándome por cada logro tuyo.
+Te amo, mi amor.` },
+    14: { texto: `"Nuestro futuro"
+
+Uno nunca sabe qué pasará en el futuro y creo que es imposible saber dónde estaremos dentro de algunos años. Pero si pudiera escoger qué pasaría, me gustaría que siguieras estando en mi vida.
+Quién sabe, tal vez en unos 8 años podamos estar casados, tener una familia y una casa que sea solo nuestra, un lugar donde podamos construir nuestra propia vida, compartir nuestros días y crear muchos más recuerdos juntos.
+Sé que todavía falta muchísimo para pensar en todo eso y que pueden pasar muchas cosas en el camino, pero me gusta imaginar cómo sería tenerte a mi lado y poder vivir juntos todas esas cosas que ahora solo podemos imaginar.
+Y mientras llega ese futuro, me gustaría que podamos estar más cerca poco a poco. Tal vez tú puedas venir algunas veces y yo pueda ir otras, para poder vernos más seguido y no dejar que la distancia nos impida disfrutar de nuestra relación.
+Quiero que podamos seguir conociéndonos, seguir creciendo juntos y seguir construyendo lo nuestro, sin importar cuánto tiempo nos tome llegar a ese futuro que imaginamos.
+No sé exactamente qué nos espera, pero si pudiera elegir, me gustaría que en ese futuro sigamos siendo nosotros.
+Y quién sabe... quizá algún día podamos mirar atrás y darnos cuenta de que todos esos sueños que alguna vez escribí en una carta terminaron convirtiéndose en nuestra realidad.
+Te amo, mi amor.` },
+    15: { texto: `"Si algún día lees estas cartas de nuevo"
+
+Tal vez en un futuro vuelvas a leer estas cartas. No sé cuál será el motivo ni en qué momento de nuestras vidas estarás cuando lo hagas, pero sería bonito pensar que las estás leyendo nuevamente porque estás pasando por un momento especial y quisiste recordar todo lo que vivimos y sentimos.
+Estas cartas expresan todo mi sentir. Cada una fue pensada en ti y en nosotros, en cada cosa que me gusta de ti, en nuestros recuerdos, en lo que hemos vivido y en todo lo que espero que podamos seguir viviendo juntos.
+Aunque llevemos un corto tiempo siendo novios, todo lo que he escrito aquí es algo que realmente siento. Cada palabra nació del cariño que te tengo y de todo lo que has llegado a significar para mí en este tiempo.
+Estas cartas son mi amor expresado en letras. Son una pequeña parte de todo lo que siento por ti y de todo lo que quizá muchas veces no sé cómo decirte en persona.
+Si te soy sincera, es la primera vez que hago algo de este tipo. Nunca antes había escrito tantas cosas para alguien ni había intentado guardar mis sentimientos de esta manera. Pero siempre hay una primera vez para todo, y me alegra que mi primera vez haciendo algo así haya sido para ti.
+Espero que realmente te hayan gustado estas cartas y que, si algún día estás volviendo a leerlas, sea porque todavía significan algo para ti. Espero que puedas recordar cómo éramos, cómo empezó todo, nuestras llamadas, nuestros juegos, nuestras risas y todos esos pequeños momentos que hicieron que poco a poco te convirtieras en alguien tan importante para mí.
+Y si estás leyendo esto nuevamente, espero que estés sonriendo un poquito al recordar todo lo que te escribí.
+Tal vez cuando las leas hayan cambiado muchas cosas, pero quiero que recuerdes que, cuando escribí cada una de estas cartas, lo hice pensando en ti y con todo el amor que te tengo.
+Así que sí, esta fue mi primera vez haciendo algo así... y espero que realmente te haya gustado, jeje.
+Te amo, mi amor.` },
+    16: { texto: `"18 cosas que quiero hacer por ti algún día"
+
+1. Comprarte algo que te guste mucho.
+2. Salir contigo solo a caminar por la ciudad mientras vamos tomados de la mano.
+3. Cocinarte algún postre que te guste.
+4. Hacerte regalos mucho más bonitos.
+5. Tener una cita contigo y poder pasar todo un día juntos.
+6. Ir a comer juntos a algún lugar que te guste.
+7. Ver una película contigo, abrazados y sin preocuparnos por la hora.
+8. Tomarnos muchas fotos juntos para tener recuerdos de nosotros.
+9. Darte un abrazo muy largo después de todo el tiempo que hemos estado separados.
+10. Conocerte en persona y descubrir cómo se siente tenerte realmente a mi lado.
+11. Ir contigo a algún lugar que siempre hayas querido conocer.
+12. Prepararte una sorpresa sin que tengas idea de qué es.
+13. Hacerte una carta a mano y poder entregártela personalmente.
+14. Pasar una noche juntos hablando de cualquier cosa, como hacemos por llamada, pero estando uno al lado del otro.
+15. Celebrar juntos alguno de nuestros aniversarios.
+16. Acompañarte cuando cumplas alguna de tus metas y celebrar contigo cuando lo logres.
+17. Crear una tradición que sea solo nuestra y que podamos repetir cada año.
+18. Poder despertar algún día a tu lado y darme cuenta de que todos esos momentos que imaginábamos finalmente se hicieron realidad.` },
+    17: { texto: `"Para cuando necesites recordar cuánto te amo"
+
+Si estás leyendo esta carta, probablemente necesitas recordar cuánto te amo. Y aunque siento que ya te lo digo bastante, quiero que tengas estas palabras para esos momentos en los que quizá necesites escucharlo un poquito más.
+Te amo muchísimo, mi amor. Te amo por todo lo que eres, por cómo me tratas, por cómo me haces sentir y por cada pequeño detalle que tienes conmigo. Te amo por nuestras llamadas, por nuestras partidas, por las veces que me haces reír y por todos esos momentos que hemos compartido, incluso cuando estamos lejos.
+Te amo porque llegaste a mi vida sin que yo estuviera buscando a alguien y terminaste convirtiéndote en una persona demasiado importante para mí. Te amo porque ahora formas parte de mis días, de mis pensamientos y de mis planes.
+Quiero que recuerdes que no tienes que hacer nada especial para que te ame. No tienes que ser perfecto, ni tener todo resuelto, ni demostrarme nada. Te amo siendo tú, con tus virtudes, tus defectos, tus ocurrencias, tus inseguridades y todas esas pequeñas cosas que te hacen ser quien eres.
+Y si algún día dudas de lo que siento por ti, recuerda que hice estas cartas pensando en ti. Que cada palabra que escribí salió de todo el cariño que te tengo. Recuerda que eres la persona por la que decidí hacer algo que nunca antes había hecho y que quise guardar todos estos sentimientos en palabras para que algún día pudieras leerlos.
+También recuerda que, aunque llevemos poco tiempo juntos, has logrado hacerte un espacio muy grande en mi corazón. No sé qué nos depara el futuro, pero sé que hoy te amo y que estoy muy feliz de poder llamarte mi novio.
+Así que, si algún día necesitas recordar cuánto te amo, vuelve a esta carta y recuerda que hay alguien que piensa en ti, que se preocupa por ti, que espera tus mensajes y tus llamadas con muchísimas ansias y que quiere seguir creando recuerdos contigo.
+Te amo cuando estamos felices, te amo cuando nos reímos, te amo cuando nos quedamos hablando hasta la madrugada y también quiero seguir amándote cuando tengamos días difíciles.
+Te amo más de lo que probablemente sé explicar con palabras.
+Y si alguna vez se te olvida, vuelve a leer esto:
+Te amo, mi amor. Muchísimo. Y espero poder demostrártelo no solo con estas cartas, sino con todo lo que todavía quiero hacer por ti.` },
+    18: { texto: `"Feliz 18, mi amor"
+
+Feliz cumpleaños, mi amor. ❤️
+Hoy cumples 18 y no sabes lo feliz que me hace poder estar aquí para celebrarlo contigo. Quizá para ti solo sea un cumpleaños más, pero para mí es especial porque puedo acompañarte en el inicio de una nueva etapa de tu vida y porque, de alguna manera, me gusta pensar que ahora también tengo un pequeño lugar en ella.
+A veces me pongo a pensar en lo curioso que es que dos personas puedan conocerse de una manera tan inesperada y terminar queriéndose tanto. Yo nunca imaginé que aquella persona con la que simplemente coincidí en un juego terminaría siendo alguien a quien esperaría durante el día para recibir un mensaje, alguien cuya llamada podría cambiarme el ánimo después de un día pesado o alguien cuya voz podría quedarme escuchando durante horas.
+Y creo que eso es una de las cosas que más me gustan de nosotros: que no necesito que pase algo enorme para sentirme feliz contigo. A veces basta con una llamada, con jugar juntos, con molestarnos un poquito o simplemente saber cómo estuvo nuestro día. Son cosas pequeñas, pero para mí significan muchísimo.
+Hoy también quiero decirte que espero que nunca olvides la persona que eres. Sé que a veces puedes dudar de ti mismo o pensar que todavía te falta mucho para conseguir lo que quieres, pero acabas de cumplir 18. No tienes que tener tu vida resuelta ahora. Tienes tiempo para equivocarte, aprender, cambiar de planes y volver a intentarlo. Yo solo espero que sigas avanzando y que no dejes de luchar por esas cosas que tanto quieres.
+Quiero que algún día puedas mirar atrás y sentirte orgulloso de todo lo que lograste. Que tengas esa moto que tanto quieres, que puedas estudiar algo que realmente te guste, que cumplas tus metas y esos sueños que me has contado. Y espero que, cuando alguno de ellos se cumpla, pueda estar ahí para alegrarme contigo, aunque sea diciéndote un simple "sabía que podías".
+También deseo que Dios te acompañe siempre, especialmente en esos momentos en los que no sepas qué hacer. Que te dé tranquilidad cuando la necesites y que te ayude a encontrar tu camino.
+Y sobre nosotros… no quiero hacer promesas sobre algo que todavía no podemos saber. Solo sé que me gustaría seguir compartiendo contigo muchas cosas que todavía nos faltan. Quiero que algún día podamos dejar de imaginar cómo sería estar juntos y simplemente vivirlo: salir a caminar tomados de la mano, cocinarte algo, darte un abrazo que dure mucho más que los que podemos darnos ahora, hacer muchas fotos juntos y crear recuerdos que no tengamos que guardar solamente en una llamada.
+Porque todavía nos faltan demasiadas cosas por vivir.
+Y eso me emociona.
+Me emociona pensar que todas las canciones que ahora me hacen pensar en ti algún día podrían traerme recuerdos nuevos. Que todavía podemos tener muchas madrugadas hablando, muchas partidas, muchas risas y también muchos días difíciles en los que simplemente nos toque estar ahí el uno para el otro.
+No sé cuánto cambie todo con el tiempo, pero sí sé que hoy estoy muy feliz de tenerte en mi vida.
+Así que hoy no quiero hablarte solamente de lo mucho que te amo. Quiero que sepas que estoy orgullosa de ti, que creo en ti y que deseo de corazón que estos 18 años sean el comienzo de muchas cosas bonitas para ti.
+Disfruta mucho tu día, mi amor. Come rico, sonríe, déjate consentir y recuerda que hay alguien que está muy feliz de poder decirte:
+Feliz 18, mi amor. ❤️
+Te amo muchísimo. Y espero que este sea solo el comienzo de todos los cumpleaños que todavía podamos celebrar juntos.` },
+  };
+
+  // ============================================================
+  // LÓGICA — no hace falta tocar de aquí para abajo
+  // ============================================================
+
+  const pantallaPassword = document.getElementById('pantallaPassword');
+  const pantallaCartas   = document.getElementById('pantallaCartas');
+  const indicadoresCont  = document.getElementById('indicadores');
+  const mensajeError     = document.getElementById('mensajeError');
+  const teclado          = document.getElementById('teclado');
+  const btnEntrar        = document.getElementById('btnEntrar');
+  const btnBorrar        = document.getElementById('btnBorrar');
+  const gridCartas       = document.getElementById('gridCartas');
+  const overlayMensaje   = document.getElementById('overlayMensaje');
+  const numeroMensaje    = document.getElementById('numeroMensaje');
+  const textoMensaje     = document.getElementById('textoMensaje');
+  const btnCerrar        = document.getElementById('btnCerrar');
+  const musicaFondo      = document.getElementById('musicaFondo');
+  const btnMusica        = document.getElementById('btnMusica');
+
+  let pistaActual = 0;
+  let sonando = false;
+
+  function cargarPista(indice){
+    if(LISTA_MUSICA.length === 0) return;
+    pistaActual = indice % LISTA_MUSICA.length;
+    musicaFondo.src = LISTA_MUSICA[pistaActual];
+  }
+
+  if(LISTA_MUSICA.length > 0){
+    cargarPista(0);
+  }
+
+  // cuando termina una canción, pasa a la siguiente automáticamente
+  musicaFondo.addEventListener('ended', () => {
+    cargarPista(pistaActual + 1);
+    musicaFondo.play().catch(() => {});
+  });
+
+  function alternarMusica(){
+    if(LISTA_MUSICA.length === 0) return;
+    if(sonando){
+      musicaFondo.pause();
+      btnMusica.innerHTML = "&#9835;";
+    } else {
+      musicaFondo.play().catch(() => {});
+      btnMusica.innerHTML = "&#10074;&#10074;";
+    }
+    sonando = !sonando;
+  }
+
+  btnMusica.addEventListener('click', alternarMusica);
+
+  let ingresado = "";
+
+  // construir indicadores según el largo de la contraseña
+  for(let i = 0; i < PASSWORD.length; i++){
+    const span = document.createElement('span');
+    span.className = 'indicador';
+    indicadoresCont.appendChild(span);
+  }
+
+  function actualizarIndicadores(){
+    const puntos = indicadoresCont.querySelectorAll('.indicador');
+    puntos.forEach((p, i) => {
+      p.classList.toggle('lleno', i < ingresado.length);
+    });
+  }
+
+  function intentarEntrar(){
+    if(ingresado === PASSWORD){
+      pantallaPassword.classList.add('oculto');
+      pantallaCartas.classList.remove('oculto');
+
+      if(LISTA_MUSICA.length > 0){
+        musicaFondo.play().then(() => {
+          sonando = true;
+          btnMusica.innerHTML = "&#10074;&#10074;";
+          btnMusica.classList.remove('oculto');
+        }).catch(() => {
+          // si el navegador bloquea el autoplay, igual mostramos el botón para que lo inicie manualmente
+          btnMusica.classList.remove('oculto');
+        });
+      }
+    } else {
+      mensajeError.classList.add('mostrar');
+      pantallaPassword.classList.remove('shake');
+      void pantallaPassword.offsetWidth;
+      pantallaPassword.classList.add('shake');
+      ingresado = "";
+      actualizarIndicadores();
+    }
+  }
+
+  teclado.querySelectorAll('.tecla[data-num]').forEach(tecla => {
+    tecla.addEventListener('click', () => {
+      if(ingresado.length < PASSWORD.length){
+        mensajeError.classList.remove('mostrar');
+        ingresado += tecla.dataset.num;
+        actualizarIndicadores();
+      }
+    });
+  });
+
+  btnBorrar.addEventListener('click', () => {
+    ingresado = ingresado.slice(0, -1);
+    actualizarIndicadores();
+  });
+
+  btnEntrar.addEventListener('click', intentarEntrar);
+
+  // construir la cuadrícula de 18 cartas
+  for(let i = 1; i <= 18; i++){
+    const div = document.createElement('div');
+    div.className = 'carta';
+    div.textContent = i;
+    div.addEventListener('click', () => mostrarCarta(i, div));
+    gridCartas.appendChild(div);
+  }
+
+  function mostrarCarta(numero, elemento){
+    document.querySelectorAll('.carta').forEach(c => c.classList.remove('elegida'));
+    elemento.classList.add('elegida');
+
+    const datos = cartas[numero];
+    numeroMensaje.textContent = 'CARTA ' + numero;
+    textoMensaje.textContent = datos.texto;
+
+    overlayMensaje.classList.add('visible');
+  }
+
+  btnCerrar.addEventListener('click', () => {
+    overlayMensaje.classList.remove('visible');
+  });
+
+  overlayMensaje.addEventListener('click', (e) => {
+    if(e.target === overlayMensaje) overlayMensaje.classList.remove('visible');
+  });
+
+</script>
+
+</body>
+</html>
